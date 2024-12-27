@@ -20,8 +20,9 @@ tar -xvzf node-alist-checker_V1.0.0.gz
 // 2. interval：任务执行的时间间隔，单位为分钟。<br><br>
 // 3. url：需要检测的文件下载链接。<br><br>
 // 4. minSizeMB：文件的最小大小（单位：MB）。如果文件大小低于此值，则判读检测失败。可以默认，但是你检测的链接文件需要超过1MB，建议放一个1-10M的文件链接用来检测<br><br>
-
-![image](https://github.com/user-attachments/assets/869d448b-0395-4ca4-b75b-e55c8dfb013a)<br><br>
+// 5. downloadTimeSec：下载时间，单位为秒。程序会按照此时间尝试下载文件后停止，建议5秒，也可根据带宽和测试的链接文件进行配置。<br><br>
+![image](https://github.com/user-attachments/assets/4ff659c9-f46e-49e3-bb50-84a3812530b1)
+<br><br>
 
 ## 3.添加node项目
 添加后运行该项目<br><br>
