@@ -33,45 +33,74 @@ function writeLog(message) {
 }
 
 // 下载检测函数
-async function checkDownload(alist, url, minSizeMB) {
+async function checkDownload(alist, url, minSizeMB, downloadTimeSec) {
+  // 临时文件路径，用于存放下载的文件片段
   const tempFilePath = path.join(TEMP_DIR, `${alist}-${Date.now()}.tmp`);
+  let downloadCompleted = false; // 标记下载是否完成
 
   try {
-    const writer = fs.createWriteStream(tempFilePath);
+    const writer = fs.createWriteStream(tempFilePath); // 用于写入下载的文件
     const response = await axios({
-      url: url,
-      method: 'GET',
-      responseType: 'stream',
+      url: url, // 下载地址
+      method: 'GET', // HTTP GET 方法
+      responseType: 'stream', // 请求响应为流
       timeout: 30 * 1000, // 设置超时时间为 30 秒
     });
 
-    // 将流写入临时文件
-    response.data.pipe(writer);
+    // 创建 Promise，用于监听文件写入完成事件
+    const downloadPromise = new Promise((resolve, reject) => {
+      // 将 HTTP 响应流写入到文件
+      response.data.pipe(writer);
 
-    // 等待流写入完成
-    await new Promise((resolve, reject) => {
-      writer.on('finish', resolve);
+      // 当文件写入完成时，标记为下载完成
+      writer.on('finish', () => {
+        downloadCompleted = true; // 标记为下载完成
+        resolve(); // 下载完成，Promise 成功
+      });
+
+      // 如果文件写入发生错误，触发 Promise 的失败
       writer.on('error', reject);
     });
 
-    // 检查文件大小
-    const stats = fs.statSync(tempFilePath);
-    const fileSizeMB = stats.size / (1024 * 1024); // 转换为 MB
+    // 创建一个定时器，用于在自定义时间后停止下载
+    const stopDownload = new Promise((resolve) => {
+      setTimeout(() => {
+        // 如果下载未完成，则停止下载流
+        if (!downloadCompleted) {
+          response.data.destroy(); // 停止下载流（中断传输）
+          writer.end(); // 结束文件写入
+          resolve(); // 停止下载后继续后续逻辑
+        }
+      }, downloadTimeSec * 1000); // 使用配置的下载时间（单位：秒）
+    });
 
+    // 同时等待下载完成或自定义时间超时事件，先完成的优先执行
+    await Promise.race([downloadPromise, stopDownload]);
+
+    // 检查文件大小
+    const stats = fs.statSync(tempFilePath); // 获取文件状态
+    const fileSizeMB = stats.size / (1024 * 1024); // 将文件大小转换为 MB
+
+    // 判断文件大小是否符合要求
     if (fileSizeMB >= minSizeMB) {
-      writeLog(`${alist}，检测成功，文件大小：${fileSizeMB.toFixed(2)} MB`);
+      // 文件大小符合要求，记录日志并返回成功
+      writeLog(`${alist}，检测成功，已下载的文件大小：${fileSizeMB.toFixed(2)} MB`);
       fs.unlinkSync(tempFilePath); // 删除临时文件
       return true;
     } else {
-      writeLog(`${alist}，检测失败，文件大小仅为：${fileSizeMB.toFixed(2)} MB，低于预期的 ${minSizeMB} MB`);
+      // 文件大小不符合要求，记录日志并返回失败
+      writeLog(
+        `${alist}，检测失败，文件大小仅为：${fileSizeMB.toFixed(2)} MB，低于预期的 ${minSizeMB} MB`
+      );
       fs.unlinkSync(tempFilePath); // 删除临时文件
       return false;
     }
   } catch (error) {
-    // 捕获错误信息
+    // 捕获错误信息并记录日志
     writeLog(`${alist}，检测失败，错误信息：${error.message}`);
+    // 如果发生错误，清理未完成的临时文件
     if (fs.existsSync(tempFilePath)) {
-      fs.unlinkSync(tempFilePath); // 清理未完成的临时文件
+      fs.unlinkSync(tempFilePath);
     }
     return false;
   }
@@ -79,51 +108,41 @@ async function checkDownload(alist, url, minSizeMB) {
 
 // 主函数
 async function main() {
-  // 读取配置文件
   const configPath = path.join(__dirname, 'config.js');
   if (!fs.existsSync(configPath)) {
     console.error('配置文件 config.js 不存在，请创建后重试！');
     process.exit(1);
   }
 
-  // 加载配置文件内容
   const tasks = require(configPath);
 
-  // 检查任务是否存在
   if (!Array.isArray(tasks) || tasks.length === 0) {
     console.error('配置文件中没有任务，请添加后重试！');
     process.exit(1);
   }
 
-  // 显示程序启动提示
   writeLog('程序已启动，正在进行定时检测...');
 
-  // 定时任务
   const intervals = [];
   for (const task of tasks) {
-    const { alist, interval, url, minSizeMB } = task;
+    const { alist, interval, url, minSizeMB, downloadTimeSec } = task;
 
-    // 检查参数有效性
-    if (!alist || !interval || !url || !minSizeMB) {
+    if (!alist || !interval || !url || !minSizeMB || !downloadTimeSec) {
       console.error(`任务配置错误，请检查：${JSON.stringify(task)}`);
       process.exit(1);
     }
 
-    // 启动前立即执行一次检测
-    const success = await checkDownload(alist, url, minSizeMB);
+    const success = await checkDownload(alist, url, minSizeMB, downloadTimeSec);
 
-    // 如果第一次检测失败，直接停止程序
     if (!success) {
       console.error('首次检测失败，程序已停止。');
       process.exit(1);
     }
 
-    // 启动定时任务
     intervals.push(
       setInterval(async () => {
-        const success = await checkDownload(alist, url, minSizeMB);
+        const success = await checkDownload(alist, url, minSizeMB, downloadTimeSec);
 
-        // 如果检测失败，停止所有任务
         if (!success) {
           for (const intervalId of intervals) {
             clearInterval(intervalId);
@@ -131,7 +150,7 @@ async function main() {
           console.error('检测失败，程序已停止。');
           process.exit(1);
         }
-      }, interval * 60 * 1000) // 将分钟转换为毫秒
+      }, interval * 60 * 1000)
     );
   }
 }
