@@ -23,8 +23,9 @@ Node.js 10 及以上版本<br><br>
 
 ## 4.添加宝塔通知
 选择一个方式进行绑定<br><br>
-![image](https://github.com/user-attachments/assets/21e3e2e8-1ea7-44c0-b081-7552483de2b7)
-![image](https://github.com/user-attachments/assets/01c52b0e-287f-4b78-a922-d24f9850b82b)
+![image](https://github.com/user-attachments/assets/21e3e2e8-1ea7-44c0-b081-7552483de2b7)<br><br>
+添加对改项目的检测并配置通知
+![image](https://github.com/user-attachments/assets/01c52b0e-287f-4b78-a922-d24f9850b82b)<br><br>
 
 ## 5.查看日志
 ![image](https://github.com/user-attachments/assets/281edb2f-d1fc-4496-8706-f371b0dd5747)
