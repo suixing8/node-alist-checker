@@ -7,7 +7,7 @@
 
 module.exports = [
   {
-    alist: "随性-alist1", // 任务1的标识符
+    alist: "alist1", // 任务1的标识符
     interval: 30, // 每 30 分钟执行一次检测
     url: "http://adb.com:5244/d/xxxx.mp4", // 文件下载链接
     minSizeMB: 1, // 文件大小最低要求 1 MB
