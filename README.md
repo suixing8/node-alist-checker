@@ -11,7 +11,6 @@ https://github.com/user-attachments/files/18259924/node-alist-checker_V1.0.0.gz<
 ```bash
 wget https://github.com/user-attachments/files/18259774/node-alist-checker_V1.0.0.gz
 tar -xvzf node-alist-checker_V1.0.0.gz
-mv node-alist-checker_V1.0.0 node-alist-checker
 ```
 ![image](https://github.com/user-attachments/assets/56e836b5-98ae-42ac-91e4-4a612a3987b4)<br><br>
 
