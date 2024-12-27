@@ -6,11 +6,11 @@ Node.js 10 及以上版本<br><br>
 
 # 教程（宝塔为例）
 ## 1.下载后解压
-https://github.com/user-attachments/files/18259924/node-alist-checker_V1.0.0.gz<br><br>
+https://github.com/user-attachments/files/18259924/node-alist-checker_V1.0.1.gz<br><br>
 或者<br><br>
 ```bash
-wget https://github.com/user-attachments/files/18259774/node-alist-checker_V1.0.0.gz
-tar -xvzf node-alist-checker_V1.0.0.gz
+wget https://github.com/user-attachments/files/18259774/node-alist-checker_V1.0.1.gz
+tar -xvzf node-alist-checker_V1.0.1.gz
 ```
 ![image](https://github.com/user-attachments/assets/56e836b5-98ae-42ac-91e4-4a612a3987b4)<br><br>
 
